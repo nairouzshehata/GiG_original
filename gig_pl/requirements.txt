@@ -1,0 +1,12 @@
+grakel==0.1.8
+matplotlib==3.3.3
+networkx==2.4
+numpy==1.19.2
+optuna==2.10.0
+pandas==1.2.3
+pytorch_lightning==1.4.9
+PyYAML==6.0
+requests==2.23.0
+scikit_learn==1.0.1
+scipy==1.4.1
+seaborn==0.11.1
