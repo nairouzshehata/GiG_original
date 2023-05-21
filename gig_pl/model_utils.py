@@ -12,7 +12,7 @@ def define_dataset(dataset_name, data_dir):
                  # 'dataset_name': 'PROTEINS',
                  'outer_k': 10,
                  'inner_k': None,
-                 'use_one': True,
+                 'use_one': False,
                  'use_node_degree': False,
                  'precompute_kron_indices': True}
 
