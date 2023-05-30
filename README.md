@@ -1,5 +1,5 @@
 # Graph-in-Graph (GiG)
-Learning interpretable latent graphs in the non-Euclidean domain for molecule prediction and healthcare applications.
+Learning interpretable latent graphs in the non-Euclidean domain for molecule prediction and healthcare applications (Original code)
 
 
 ## Instructions
