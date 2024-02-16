@@ -1,4 +1,5 @@
 /gig_origin/data/ogbg_moltox21/*
 /gig_origin/data/PROTEINS_full/*
 /gig_pl/data/CHEMICAL/*
-
+/gig_pl/logs/*
+/gig_pl/lightning_logs/*

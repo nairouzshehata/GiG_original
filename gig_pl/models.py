@@ -2,11 +2,11 @@ import torch
 import numpy as np
 from torch.nn import Module, Linear, ModuleList, Sequential, LeakyReLU, ReLU
 from pg_models.DynamicEdgeConv import DynamicEdgeConv
-from torch_geometric.nn.glob.glob import global_add_pool, global_mean_pool
+from torch_geometric.nn.pool import global_add_pool, global_mean_pool
 from torch_geometric.nn import GraphConv, EdgeConv, GCNConv, GATConv, SAGEConv
 from torch_geometric.utils import dense_to_sparse
 from torch_geometric.nn.models.basic_gnn import GIN
-
+from lightning.pytorch import LightningModule
 try:
     from torch_cluster import knn
 except ImportError:
@@ -17,7 +17,7 @@ def DGCNN_layer(in_size, out_size, k=10):
 
     return DynamicEdgeConv(DGCNN_conv, k=k)  # 10 #change to fix graph!!!!
 #NODE-LEVEL MODULES
-class NodeConvolution(Module):
+class NodeConvolution(LightningModule):
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -110,7 +110,7 @@ class LGL(Module):
         edge_index, edge_weight = dense_to_sparse(adj)
         return x, edge_index, edge_weight, adj
 #GNN
-class GNN(Module):
+class GNN(LightningModule):
     def __init__(self, config, input_size):
         super().__init__()
         self.config = config
@@ -157,7 +157,7 @@ class GNN(Module):
             x = self.activation(x)
         return x
 #CLASSIFIER
-class Classifier(Module):
+class Classifier(LightningModule):
     def __init__(self, config, input_size, output_dim):
         super().__init__()
         self.config = config
@@ -175,7 +175,7 @@ class Classifier(Module):
         x = self.fc(x)
         return x
 
-class GiG(Module):
+class GiG(LightningModule):
     def __init__(self, config):
         super().__init__()
         self.config = config

@@ -1,4 +1,5 @@
-import pytorch_lightning as pl
+#import pytorch_lightning as pl
+import lightning as pl
 import torchmetrics
 from models import GiG
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR
@@ -39,7 +40,8 @@ class LglKlTask(pl.LightningModule):
 
         self.alpha = config["alpha"]
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
+        self.automatic_optimization = False
 
         metrics = self._shared_step(batch, addition="train")
         self.log_dict(metrics, prog_bar=True)
@@ -257,20 +259,31 @@ class LglTask(pl.LightningModule):
         self.model = GiG(self.config)
         self.initial_loss = losses[config["loss"]]
         self.saving_path = config["saving_path"]
+        self.automatic_optimization = False
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+        self.acc = torchmetrics.classification.Accuracy(task="multiclass", num_classes = config["output_dim"])
+        self.f1 = torchmetrics.classification.F1Score(task="multiclass", num_classes = config["output_dim"])
+        self.precision = torchmetrics.classification.Precision(task="multiclass", num_classes = config["output_dim"])
+        self.recall = torchmetrics.classification.Recall(task="multiclass", num_classes = config["output_dim"])
+
+    def training_step(self, batch, batch_idx):
+        self.automatic_optimization = False
         metrics, _  = self._shared_step(batch, addition="train")
-        self.log_dict(metrics)
+        self.log("train_acc", metrics["train_acc"], on_step=False, on_epoch=True)
+        self.log("train_loss", metrics["train_loss"], on_step=False, on_epoch=True)
+       
         return metrics
 
     def validation_step(self, batch, batch_idx):
         metrics, _ = self._shared_step(batch, addition="val")
-        self.log_dict(metrics)
+        self.log("val_acc", metrics["val_acc"], on_step=False, on_epoch=True)
+        self.log("val_loss", metrics["val_loss"], on_step=False, on_epoch=True)
         return metrics
 
     def test_step(self, batch, batch_idx):
         metrics, adj = self._shared_step(batch, addition="test")
-        self.log_dict(metrics)
+        self.log("test_acc", metrics["test_acc"], on_step=False, on_epoch=True)
+        self.log("test_loss", metrics["test_loss"], on_step=False, on_epoch=True)
         if not os.path.isfile(self.saving_path + 'G_trsh_' + str(0.5) + '.graphml'):
             if batch_idx == 0:
                 for trh in [0.5, 0.3, 0.1, 0.01, 0.001, 0.0001]:
@@ -308,18 +321,12 @@ class LglTask(pl.LightningModule):
         labels = labels.int()
 
 
-
-        acc = torchmetrics.functional.accuracy(y_hat, labels)
-        f1 = torchmetrics.functional.f1(y_hat, labels)
-        # auc = torchmetrics.functional.auc(y_hat, data.y, reorder=True)
-        # auroc = torchmetrics.functional.auroc(y_hat, data.y)
-        precision = torchmetrics.functional.precision(y_hat, labels)
-        recall = torchmetrics.functional.recall(y_hat, labels)
-        metrics = {addition+"_acc": acc, addition+"_f1": f1,
+        
+        metrics = {addition+"_acc": self.acc(y_hat, labels), addition+"_f1": self.f1(y_hat, labels),
                    # addition+"_auc": auc,
                    # addition+"_auroc": auroc,
-                   addition+"_precision": precision,
-                   addition+"_recall": recall, addition+"_avg_coeff": avg_coeff,
+                   addition+"_precision": self.precision(y_hat, labels),
+                   addition+"_recall": self.recall(y_hat, labels), addition+"_avg_coeff": avg_coeff,
                    addition+"_eigenDecomposition_coeff": eigenDecomposition_coeff,
                    addition+"_loss": loss.clone().detach(), "loss": loss}
         if addition == "test":
